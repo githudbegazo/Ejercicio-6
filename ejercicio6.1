@@ -1,0 +1,363 @@
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+// Excepciones personalizadas
+class DatosInvalidosException extends Exception {
+    public DatosInvalidosException(String mensaje) {
+        super(mensaje);
+    }
+}
+
+class PrecioInferiorException extends Exception {
+    public PrecioInferiorException(String mensaje) {
+        super(mensaje);
+    }
+}
+
+class ContratoInvalidoException extends Exception {
+    public ContratoInvalidoException(String mensaje) {
+        super(mensaje);
+    }
+}
+
+class PagoInvalidoException extends Exception {
+    public PagoInvalidoException(String mensaje) {
+        super(mensaje);
+    }
+}
+
+// Clase Propiedad
+class Propiedad {
+    private String direccion;
+    private double precio;
+    private double tamano;
+
+    public Propiedad(String direccion, double precio, double tamano) throws DatosInvalidosException {
+        if (precio <= 0) {
+            throw new DatosInvalidosException("El precio debe ser positivo");
+        }
+        if (tamano <= 0) {
+            throw new DatosInvalidosException("El tamano debe ser positivo");
+        }
+        if (direccion == null || direccion.trim().isEmpty()) {
+            throw new DatosInvalidosException("La direccion no puede estar vacia");
+        }
+        
+        this.direccion = direccion;
+        this.precio = precio;
+        this.tamano = tamano;
+    }
+
+    // Getters
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public double getPrecio() {
+        return precio;
+    }
+
+    public double getTamano() {
+        return tamano;
+    }
+
+    // Setters con validacion
+    public void setPrecio(double precio) throws DatosInvalidosException {
+        if (precio <= 0) {
+            throw new DatosInvalidosException("El precio debe ser positivo");
+        }
+        this.precio = precio;
+    }
+
+    public void setTamano(double tamano) throws DatosInvalidosException {
+        if (tamano <= 0) {
+            throw new DatosInvalidosException("El tamano debe ser positivo");
+        }
+        this.tamano = tamano;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Propiedad: %s, Precio: $%.2f, Tamano: %.2f m2", 
+                           direccion, precio, tamano);
+    }
+}
+
+// Clase TransaccionInmobiliaria
+class TransaccionInmobiliaria {
+    private int id;
+    private Propiedad propiedad;
+    private double precioTransaccion;
+    private LocalDate fechaTransaccion;
+
+    public TransaccionInmobiliaria(int id, Propiedad propiedad, double precioTransaccion) 
+            throws PrecioInferiorException {
+        if (precioTransaccion < propiedad.getPrecio()) {
+            throw new PrecioInferiorException(
+                String.format("El precio de transaccion ($%.2f) no puede ser menor al precio de la propiedad ($%.2f)",
+                            precioTransaccion, propiedad.getPrecio()));
+        }
+        
+        this.id = id;
+        this.propiedad = propiedad;
+        this.precioTransaccion = precioTransaccion;
+        this.fechaTransaccion = LocalDate.now();
+    }
+
+    // Getters
+    public int getId() {
+        return id;
+    }
+
+    public Propiedad getPropiedad() {
+        return propiedad;
+    }
+
+    public double getPrecioTransaccion() {
+        return precioTransaccion;
+    }
+
+    public LocalDate getFechaTransaccion() {
+        return fechaTransaccion;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Transaccion ID: %d, Fecha: %s, Precio: $%.2f\n%s", 
+                           id, fechaTransaccion, precioTransaccion, propiedad);
+    }
+}
+
+// Clase ContratoAlquiler
+class ContratoAlquiler {
+    private int numeroContrato;
+    private Propiedad propiedad;
+    private int duracionMeses;
+    private double montoAlquiler;
+    private LocalDate fechaInicio;
+
+    public ContratoAlquiler(int numeroContrato, Propiedad propiedad) {
+        this.numeroContrato = numeroContrato;
+        this.propiedad = propiedad;
+        this.fechaInicio = LocalDate.now();
+    }
+
+    public void establecerDuracion(int duracionMeses) throws ContratoInvalidoException {
+        if (duracionMeses <= 0) {
+            throw new ContratoInvalidoException("La duracion del contrato debe ser positiva");
+        }
+        this.duracionMeses = duracionMeses;
+    }
+
+    public void establecerMontoAlquiler(double montoAlquiler) throws ContratoInvalidoException {
+        if (montoAlquiler <= 0) {
+            throw new ContratoInvalidoException("El monto del alquiler debe ser positivo");
+        }
+        this.montoAlquiler = montoAlquiler;
+    }
+
+    // Getters
+    public int getNumeroContrato() {
+        return numeroContrato;
+    }
+
+    public Propiedad getPropiedad() {
+        return propiedad;
+    }
+
+    public int getDuracionMeses() {
+        return duracionMeses;
+    }
+
+    public double getMontoAlquiler() {
+        return montoAlquiler;
+    }
+
+    public LocalDate getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public LocalDate getFechaFin() {
+        return fechaInicio.plusMonths(duracionMeses);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Contrato #%d, Duracion: %d meses, Alquiler: $%.2f/mes\nInicio: %s, Fin: %s\n%s",
+                           numeroContrato, duracionMeses, montoAlquiler, 
+                           fechaInicio, getFechaFin(), propiedad);
+    }
+}
+
+// Clase para representar un pago
+class Pago {
+    private LocalDate fecha;
+    private double monto;
+    private String descripcion;
+
+    public Pago(LocalDate fecha, double monto, String descripcion) throws PagoInvalidoException {
+        if (fecha.isAfter(LocalDate.now())) {
+            throw new PagoInvalidoException("No se puede registrar un pago con fecha futura");
+        }
+        if (monto <= 0) {
+            throw new PagoInvalidoException("El monto del pago debe ser positivo");
+        }
+        
+        this.fecha = fecha;
+        this.monto = monto;
+        this.descripcion = descripcion;
+    }
+
+    // Getters
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
+    public double getMonto() {
+        return monto;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Pago: $%.2f - %s (%s)", monto, descripcion, fecha);
+    }
+}
+
+// Clase HistorialDePagos
+class HistorialDePagos {
+    private List<Pago> pagos;
+    private int inquilinoId;
+
+    public HistorialDePagos(int inquilinoId) {
+        this.inquilinoId = inquilinoId;
+        this.pagos = new ArrayList<>();
+    }
+
+    public void registrarPago(LocalDate fecha, double monto, String descripcion) 
+            throws PagoInvalidoException {
+        Pago pago = new Pago(fecha, monto, descripcion);
+        pagos.add(pago);
+    }
+
+    public void registrarPago(double monto, String descripcion) throws PagoInvalidoException {
+        registrarPago(LocalDate.now(), monto, descripcion);
+    }
+
+    public List<Pago> obtenerPagos() {
+        return new ArrayList<>(pagos);
+    }
+
+    public double calcularTotalPagado() {
+        return pagos.stream().mapToDouble(Pago::getMonto).sum();
+    }
+
+    public List<Pago> obtenerPagosPorPeriodo(LocalDate fechaInicio, LocalDate fechaFin) {
+        return pagos.stream()
+                   .filter(pago -> !pago.getFecha().isBefore(fechaInicio) && 
+                                  !pago.getFecha().isAfter(fechaFin))
+                   .toList();
+    }
+
+    public int getInquilinoId() {
+        return inquilinoId;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Historial de Pagos - Inquilino ID: %d\n", inquilinoId));
+        sb.append(String.format("Total de pagos: %d\n", pagos.size()));
+        sb.append(String.format("Monto total pagado: $%.2f\n", calcularTotalPagado()));
+        sb.append("Detalle de pagos:\n");
+        
+        for (Pago pago : pagos) {
+            sb.append("  ").append(pago.toString()).append("\n");
+        }
+        
+        return sb.toString();
+    }
+}
+
+// Clase principal para demostrar el uso del sistema
+public class SistemaInmobiliario {
+    public static void main(String[] args) {
+        try {
+            // Crear propiedades
+            System.out.println("=== CREANDO PROPIEDADES ===");
+            Propiedad propiedad1 = new Propiedad("Av. Principal 123", 150000.0, 85.5);
+            Propiedad propiedad2 = new Propiedad("Calle Secundaria 456", 200000.0, 120.0);
+            System.out.println(propiedad1);
+            System.out.println(propiedad2);
+
+            // Crear transacciones
+            System.out.println("\n=== CREANDO TRANSACCIONES ===");
+            TransaccionInmobiliaria transaccion1 = new TransaccionInmobiliaria(1, propiedad1, 155000.0);
+            System.out.println(transaccion1);
+
+            // Crear contrato de alquiler
+            System.out.println("\n=== CREANDO CONTRATO DE ALQUILER ===");
+            ContratoAlquiler contrato = new ContratoAlquiler(101, propiedad2);
+            contrato.establecerDuracion(12);
+            contrato.establecerMontoAlquiler(1500.0);
+            System.out.println(contrato);
+
+            // Crear historial de pagos
+            System.out.println("\n=== REGISTRANDO PAGOS ===");
+            HistorialDePagos historial = new HistorialDePagos(1001);
+            historial.registrarPago(1500.0, "Alquiler mes 1");
+            historial.registrarPago(LocalDate.now().minusDays(30), 1500.0, "Alquiler mes anterior");
+            historial.registrarPago(200.0, "Deposito de garantia");
+            System.out.println(historial);
+
+        } catch (DatosInvalidosException e) {
+            System.err.println("Error en datos de propiedad: " + e.getMessage());
+        } catch (PrecioInferiorException e) {
+            System.err.println("Error en transaccion: " + e.getMessage());
+        } catch (ContratoInvalidoException e) {
+            System.err.println("Error en contrato: " + e.getMessage());
+        } catch (PagoInvalidoException e) {
+            System.err.println("Error en pago: " + e.getMessage());
+        }
+
+        // Demostrar excepciones
+        System.out.println("\n=== DEMOSTRANDO MANEJO DE EXCEPCIONES ===");
+        
+        try {
+            // Precio negativo
+            Propiedad propiedadInvalida = new Propiedad("Direccion Test", -1000.0, 50.0);
+        } catch (DatosInvalidosException e) {
+            System.out.println("Excepcion capturada: " + e.getMessage());
+        }
+
+        try {
+            // Precio de transaccion inferior
+            TransaccionInmobiliaria transaccionInvalida = 
+                new TransaccionInmobiliaria(2, propiedad1, 100000.0);
+        } catch (PrecioInferiorException e) {
+            System.out.println("Excepcion capturada: " + e.getMessage());
+        } catch (DatosInvalidosException e) {
+            System.out.println("Error inesperado: " + e.getMessage());
+        }
+
+        try {
+            // Duracion negativa de contrato
+            ContratoAlquiler contratoInvalido = new ContratoAlquiler(102, propiedad1);
+            contratoInvalido.establecerDuracion(-5);
+        } catch (ContratoInvalidoException e) {
+            System.out.println("Excepcion capturada: " + e.getMessage());
+        }
+
+        try {
+            // Pago con fecha futura
+            HistorialDePagos historialTest = new HistorialDePagos(1002);
+            historialTest.registrarPago(LocalDate.now().plusDays(1), 1000.0, "Pago futuro");
+        } catch (PagoInvalidoException e) {
+            System.out.println("Excepcion capturada: " + e.getMessage());
+        }
+    }
+}
